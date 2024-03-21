@@ -5,6 +5,10 @@ import { Cw20Coin, InstantiateMsg } from "../../bindings/Cw20.types";
 import { InstantiateMsg as VotingInstantiateMsg } from "../../bindings/DaoVotingCw20Staked.types";
 import { InstantiateMsg as ProposalInitMsg } from "../../bindings/DaoProposalSingle.types";
 import { InstantiateMsg as DaoInitMsg } from "../../bindings/DaoDaoCore.types";
+import {
+  InstantiateMsg as TrustWorthyInitMsg,
+  Coin,
+} from "../../bindings/Contract.types";
 
 export async function initToken(
   client: SigningCosmWasmClient,
@@ -37,17 +41,47 @@ export async function initToken(
   return info.contractAddress;
 }
 
+export async function initTrustWothyContract(
+  client: SigningCosmWasmClient,
+  address: string,
+  code: number
+) {
+  const initMsg: TrustWorthyInitMsg = {
+    amount_provider_to_pay: {
+      amount: "1",
+      denom: "orai",
+    } as Coin,
+    denom: "orai",
+    owner: "orai1lwuqpj9teef8j0rjy2l4c5ay9yddw26m03tlem",
+    signal_providers: ["orai1cknd27x0244595pp7a5c9sdekl3ywl52x62ssn"],
+  };
+
+  const info = await client.instantiate(
+    address,
+    code,
+    // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+    // @ts-ignore
+    initMsg,
+    "Trading trustworthy proof",
+    "auto",
+    {
+      admin: address,
+    }
+  );
+  return info.contractAddress;
+}
+
 export async function initDao(
   client: SigningCosmWasmClient,
   address: string,
   code: {
-    dao: number,
-    cw20Base: number,
-    staking: number,
-    voting: number,
-    proposal: number
+    dao: number;
+    cw20Base: number;
+    staking: number;
+    voting: number;
+    proposal: number;
   }
-) {  
+) {
   const votingInstantiateMsg: VotingInstantiateMsg = {
     token_info: {
       new: {
