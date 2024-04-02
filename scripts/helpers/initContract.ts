@@ -8,7 +8,7 @@ import { InstantiateMsg as DaoInitMsg } from "../../bindings/DaoDaoCore.types";
 import {
   InstantiateMsg as TrustWorthyInitMsg,
   Coin,
-} from "../../bindings/Contract.types";
+} from "../../bindings/ContractTradingTrustworthy.types";
 
 export async function initToken(
   client: SigningCosmWasmClient,
@@ -54,6 +54,8 @@ export async function initTrustWothyContract(
     denom: "orai",
     owner: "orai1lwuqpj9teef8j0rjy2l4c5ay9yddw26m03tlem",
     signal_providers: ["orai1cknd27x0244595pp7a5c9sdekl3ywl52x62ssn"],
+    oracle_address:
+      "orai19a5y29zj8qhvgew9e7vrgamzfjf63tpdrwr6545l568dd40q9c9s78fk36",
   };
 
   const info = await client.instantiate(
