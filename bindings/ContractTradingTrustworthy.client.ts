@@ -6,7 +6,7 @@
 
 import { CosmWasmClient, SigningCosmWasmClient, ExecuteResult } from "@cosmjs/cosmwasm-stargate";
 import { StdFee } from "@cosmjs/amino";
-import {Uint128, InstantiateMsg, Coin, ExecuteMsg, PublicSignal, QueryMsg, ConfigResponse, LatestUserReceivedSignalResponse, PrivateSignalResponse, ProviderSignalFeeResponse, PublicSignalResponse, Timestamp, Uint64, RequestEncryptedUserResponse, RequestEncryptedInfo, TemporaryPrivateSignalsResponse, TokenPriceInfoResponse, PriceInfo, UserReceivedSignalsResponse} from "./ContractTradingTrustworthy.types";
+import {Uint128, InstantiateMsg, Coin, ExecuteMsg, PublicSignal, QueryMsg, ArrayOfAllUserReceiveSignalsResponse, AllUserReceiveSignalsResponse, ConfigResponse, LatestUserReceivedSignalResponse, UserReceiveSignal, Addr, ProviderInfoResponse, ProviderInfo, PublicSignalResponse, PublicSignalInfo, Timestamp, Uint64, RequestEncryptedUserResponse, RequestEncryptedInfo, TempSignalWithRequestResponse, TempSignalRequestInfo, TemporaryPrivateSignalInfo, PriceInfo, TemporarySignalInfoResponse, UserReceivedSignalsResponse} from "./ContractTradingTrustworthy.types";
 export interface ContractTradingTrustworthyReadOnlyInterface {
   contractAddress: string;
   config: () => Promise<ConfigResponse>;
@@ -15,16 +15,23 @@ export interface ContractTradingTrustworthyReadOnlyInterface {
   }: {
     provider: string;
   }) => Promise<PublicSignalResponse>;
-  privateSignal: ({
+  temporarySignalInfo: ({
     provider
   }: {
     provider: string;
-  }) => Promise<PrivateSignalResponse>;
-  providerSignalFee: ({
+  }) => Promise<TemporarySignalInfoResponse>;
+  requestEncryptedInfo: ({
+    provider,
+    signalHash
+  }: {
+    provider: string;
+    signalHash: string;
+  }) => Promise<RequestEncryptedUserResponse>;
+  providerInfo: ({
     provider
   }: {
     provider: string;
-  }) => Promise<ProviderSignalFeeResponse>;
+  }) => Promise<ProviderInfoResponse>;
   userReceivedSignals: ({
     provider,
     user
@@ -39,23 +46,16 @@ export interface ContractTradingTrustworthyReadOnlyInterface {
     provider: string;
     user: string;
   }) => Promise<LatestUserReceivedSignalResponse>;
-  temporaryPrivateSignals: ({
+  tempSignalWithRequest: ({
     provider
   }: {
-    provider: string;
-  }) => Promise<TemporaryPrivateSignalsResponse>;
-  requestEncryptedInfo: ({
-    provider,
-    signalHash
+    provider?: string;
+  }) => Promise<TempSignalWithRequestResponse>;
+  allUserReceiveSignal: ({
+    user
   }: {
-    provider: string;
-    signalHash: string;
-  }) => Promise<RequestEncryptedUserResponse>;
-  tokenPriceInfo: ({
-    signalHash
-  }: {
-    signalHash: string;
-  }) => Promise<TokenPriceInfoResponse>;
+    user: string;
+  }) => Promise<ArrayOfAllUserReceiveSignalsResponse>;
 }
 export class ContractTradingTrustworthyQueryClient implements ContractTradingTrustworthyReadOnlyInterface {
   client: CosmWasmClient;
@@ -66,13 +66,13 @@ export class ContractTradingTrustworthyQueryClient implements ContractTradingTru
     this.contractAddress = contractAddress;
     this.config = this.config.bind(this);
     this.publicSignal = this.publicSignal.bind(this);
-    this.privateSignal = this.privateSignal.bind(this);
-    this.providerSignalFee = this.providerSignalFee.bind(this);
+    this.temporarySignalInfo = this.temporarySignalInfo.bind(this);
+    this.requestEncryptedInfo = this.requestEncryptedInfo.bind(this);
+    this.providerInfo = this.providerInfo.bind(this);
     this.userReceivedSignals = this.userReceivedSignals.bind(this);
     this.latestUserReceivedSignal = this.latestUserReceivedSignal.bind(this);
-    this.temporaryPrivateSignals = this.temporaryPrivateSignals.bind(this);
-    this.requestEncryptedInfo = this.requestEncryptedInfo.bind(this);
-    this.tokenPriceInfo = this.tokenPriceInfo.bind(this);
+    this.tempSignalWithRequest = this.tempSignalWithRequest.bind(this);
+    this.allUserReceiveSignal = this.allUserReceiveSignal.bind(this);
   }
 
   config = async (): Promise<ConfigResponse> => {
@@ -91,24 +91,38 @@ export class ContractTradingTrustworthyQueryClient implements ContractTradingTru
       }
     });
   };
-  privateSignal = async ({
+  temporarySignalInfo = async ({
     provider
   }: {
     provider: string;
-  }): Promise<PrivateSignalResponse> => {
+  }): Promise<TemporarySignalInfoResponse> => {
     return this.client.queryContractSmart(this.contractAddress, {
-      private_signal: {
+      temporary_signal_info: {
         provider
       }
     });
   };
-  providerSignalFee = async ({
+  requestEncryptedInfo = async ({
+    provider,
+    signalHash
+  }: {
+    provider: string;
+    signalHash: string;
+  }): Promise<RequestEncryptedUserResponse> => {
+    return this.client.queryContractSmart(this.contractAddress, {
+      request_encrypted_info: {
+        provider,
+        signal_hash: signalHash
+      }
+    });
+  };
+  providerInfo = async ({
     provider
   }: {
     provider: string;
-  }): Promise<ProviderSignalFeeResponse> => {
+  }): Promise<ProviderInfoResponse> => {
     return this.client.queryContractSmart(this.contractAddress, {
-      provider_signal_fee: {
+      provider_info: {
         provider
       }
     });
@@ -141,39 +155,25 @@ export class ContractTradingTrustworthyQueryClient implements ContractTradingTru
       }
     });
   };
-  temporaryPrivateSignals = async ({
+  tempSignalWithRequest = async ({
     provider
   }: {
-    provider: string;
-  }): Promise<TemporaryPrivateSignalsResponse> => {
+    provider?: string;
+  }): Promise<TempSignalWithRequestResponse> => {
     return this.client.queryContractSmart(this.contractAddress, {
-      temporary_private_signals: {
+      temp_signal_with_request: {
         provider
       }
     });
   };
-  requestEncryptedInfo = async ({
-    provider,
-    signalHash
+  allUserReceiveSignal = async ({
+    user
   }: {
-    provider: string;
-    signalHash: string;
-  }): Promise<RequestEncryptedUserResponse> => {
+    user: string;
+  }): Promise<ArrayOfAllUserReceiveSignalsResponse> => {
     return this.client.queryContractSmart(this.contractAddress, {
-      request_encrypted_info: {
-        provider,
-        signal_hash: signalHash
-      }
-    });
-  };
-  tokenPriceInfo = async ({
-    signalHash
-  }: {
-    signalHash: string;
-  }): Promise<TokenPriceInfoResponse> => {
-    return this.client.queryContractSmart(this.contractAddress, {
-      token_price_info: {
-        signal_hash: signalHash
+      all_user_receive_signal: {
+        user
       }
     });
   };
@@ -181,40 +181,34 @@ export class ContractTradingTrustworthyQueryClient implements ContractTradingTru
 export interface ContractTradingTrustworthyInterface extends ContractTradingTrustworthyReadOnlyInterface {
   contractAddress: string;
   sender: string;
-  sendPublicSignal: ({
-    signal
+  registerToBeProvider: ({
+    avatar,
+    banner,
+    description,
+    fee,
+    name
   }: {
-    signal: PublicSignal;
+    avatar?: string;
+    banner?: string;
+    description: string;
+    fee: Coin;
+    name: string;
   }, _fee?: number | StdFee | "auto", _memo?: string, _funds?: Coin[]) => Promise<ExecuteResult>;
   sendPrivateSignal: ({
-    signalHash
+    signalHash,
+    token
   }: {
     signalHash: string;
+    token: string;
   }, _fee?: number | StdFee | "auto", _memo?: string, _funds?: Coin[]) => Promise<ExecuteResult>;
-  registerToBeProvider: (_fee?: number | StdFee | "auto", _memo?: string, _funds?: Coin[]) => Promise<ExecuteResult>;
-  changeOwner: ({
-    newOwner
+  sendPublicSignal: ({
+    signal,
+    signalHash
   }: {
-    newOwner: string;
+    signal: PublicSignal;
+    signalHash: string;
   }, _fee?: number | StdFee | "auto", _memo?: string, _funds?: Coin[]) => Promise<ExecuteResult>;
-  changeFeeProvider: ({
-    newFee
-  }: {
-    newFee: Coin;
-  }, _fee?: number | StdFee | "auto", _memo?: string, _funds?: Coin[]) => Promise<ExecuteResult>;
-  addOrRemoveProvider: ({
-    changeState,
-    providers
-  }: {
-    changeState: boolean;
-    providers: string[];
-  }, _fee?: number | StdFee | "auto", _memo?: string, _funds?: Coin[]) => Promise<ExecuteResult>;
-  setProviderSignalFee: ({
-    fee
-  }: {
-    fee: Coin;
-  }, _fee?: number | StdFee | "auto", _memo?: string, _funds?: Coin[]) => Promise<ExecuteResult>;
-  requestLatestSignalFromProvider: ({
+  requestSignalFromProvider: ({
     provider,
     signalHash,
     userPublicKey
@@ -230,17 +224,25 @@ export interface ContractTradingTrustworthyInterface extends ContractTradingTrus
     encryptedSignal: string;
     user: string;
   }, _fee?: number | StdFee | "auto", _memo?: string, _funds?: Coin[]) => Promise<ExecuteResult>;
-  claimFeeFromProvider: ({
-    provider,
-    signalHash
+  changeOwner: ({
+    newOwner
   }: {
-    provider: string;
-    signalHash: string;
+    newOwner: string;
   }, _fee?: number | StdFee | "auto", _memo?: string, _funds?: Coin[]) => Promise<ExecuteResult>;
-  changeOracleAddress: ({
-    newOracle
+  changeFeeProvider: ({
+    newFee
   }: {
-    newOracle: string;
+    newFee: Coin;
+  }, _fee?: number | StdFee | "auto", _memo?: string, _funds?: Coin[]) => Promise<ExecuteResult>;
+  setProviderSignalFee: ({
+    fee
+  }: {
+    fee: Coin;
+  }, _fee?: number | StdFee | "auto", _memo?: string, _funds?: Coin[]) => Promise<ExecuteResult>;
+  changePriceOracle: ({
+    newPriceOracle
+  }: {
+    newPriceOracle: string;
   }, _fee?: number | StdFee | "auto", _memo?: string, _funds?: Coin[]) => Promise<ExecuteResult>;
 }
 export class ContractTradingTrustworthyClient extends ContractTradingTrustworthyQueryClient implements ContractTradingTrustworthyInterface {
@@ -253,44 +255,97 @@ export class ContractTradingTrustworthyClient extends ContractTradingTrustworthy
     this.client = client;
     this.sender = sender;
     this.contractAddress = contractAddress;
-    this.sendPublicSignal = this.sendPublicSignal.bind(this);
-    this.sendPrivateSignal = this.sendPrivateSignal.bind(this);
     this.registerToBeProvider = this.registerToBeProvider.bind(this);
+    this.sendPrivateSignal = this.sendPrivateSignal.bind(this);
+    this.sendPublicSignal = this.sendPublicSignal.bind(this);
+    this.requestSignalFromProvider = this.requestSignalFromProvider.bind(this);
+    this.sendSignalEncryptedToUser = this.sendSignalEncryptedToUser.bind(this);
     this.changeOwner = this.changeOwner.bind(this);
     this.changeFeeProvider = this.changeFeeProvider.bind(this);
-    this.addOrRemoveProvider = this.addOrRemoveProvider.bind(this);
     this.setProviderSignalFee = this.setProviderSignalFee.bind(this);
-    this.requestLatestSignalFromProvider = this.requestLatestSignalFromProvider.bind(this);
-    this.sendSignalEncryptedToUser = this.sendSignalEncryptedToUser.bind(this);
-    this.claimFeeFromProvider = this.claimFeeFromProvider.bind(this);
-    this.changeOracleAddress = this.changeOracleAddress.bind(this);
+    this.changePriceOracle = this.changePriceOracle.bind(this);
   }
 
-  sendPublicSignal = async ({
-    signal
+  registerToBeProvider = async ({
+    avatar,
+    banner,
+    description,
+    fee,
+    name
   }: {
-    signal: PublicSignal;
+    avatar?: string;
+    banner?: string;
+    description: string;
+    fee: Coin;
+    name: string;
   }, _fee: number | StdFee | "auto" = "auto", _memo?: string, _funds?: Coin[]): Promise<ExecuteResult> => {
     return await this.client.execute(this.sender, this.contractAddress, {
-      send_public_signal: {
-        signal
+      register_to_be_provider: {
+        avatar,
+        banner,
+        description,
+        fee,
+        name
       }
     }, _fee, _memo, _funds);
   };
   sendPrivateSignal = async ({
-    signalHash
+    signalHash,
+    token
   }: {
     signalHash: string;
+    token: string;
   }, _fee: number | StdFee | "auto" = "auto", _memo?: string, _funds?: Coin[]): Promise<ExecuteResult> => {
     return await this.client.execute(this.sender, this.contractAddress, {
       send_private_signal: {
+        signal_hash: signalHash,
+        token
+      }
+    }, _fee, _memo, _funds);
+  };
+  sendPublicSignal = async ({
+    signal,
+    signalHash
+  }: {
+    signal: PublicSignal;
+    signalHash: string;
+  }, _fee: number | StdFee | "auto" = "auto", _memo?: string, _funds?: Coin[]): Promise<ExecuteResult> => {
+    return await this.client.execute(this.sender, this.contractAddress, {
+      send_public_signal: {
+        signal,
         signal_hash: signalHash
       }
     }, _fee, _memo, _funds);
   };
-  registerToBeProvider = async (_fee: number | StdFee | "auto" = "auto", _memo?: string, _funds?: Coin[]): Promise<ExecuteResult> => {
+  requestSignalFromProvider = async ({
+    provider,
+    signalHash,
+    userPublicKey
+  }: {
+    provider: string;
+    signalHash: string;
+    userPublicKey: string;
+  }, _fee: number | StdFee | "auto" = "auto", _memo?: string, _funds?: Coin[]): Promise<ExecuteResult> => {
     return await this.client.execute(this.sender, this.contractAddress, {
-      register_to_be_provider: {}
+      request_signal_from_provider: {
+        provider,
+        signal_hash: signalHash,
+        user_public_key: userPublicKey
+      }
+    }, _fee, _memo, _funds);
+  };
+  sendSignalEncryptedToUser = async ({
+    encryptedSignal,
+    user
+  }: {
+    encryptedSignal: string;
+    user: string;
+  }, _fee: number | StdFee | "auto" = "auto", _memo?: string, _funds?: Coin[]): Promise<ExecuteResult> => {
+    return await this.client.execute(this.sender, this.contractAddress, {
+      send_signal_encrypted_to_user: {
+        encrypted_signal: encryptedSignal,
+        user
+      }
     }, _fee, _memo, _funds);
   };
   changeOwner = async ({
@@ -315,20 +370,6 @@ export class ContractTradingTrustworthyClient extends ContractTradingTrustworthy
       }
     }, _fee, _memo, _funds);
   };
-  addOrRemoveProvider = async ({
-    changeState,
-    providers
-  }: {
-    changeState: boolean;
-    providers: string[];
-  }, _fee: number | StdFee | "auto" = "auto", _memo?: string, _funds?: Coin[]): Promise<ExecuteResult> => {
-    return await this.client.execute(this.sender, this.contractAddress, {
-      add_or_remove_provider: {
-        change_state: changeState,
-        providers
-      }
-    }, _fee, _memo, _funds);
-  };
   setProviderSignalFee = async ({
     fee
   }: {
@@ -340,59 +381,14 @@ export class ContractTradingTrustworthyClient extends ContractTradingTrustworthy
       }
     }, _fee, _memo, _funds);
   };
-  requestLatestSignalFromProvider = async ({
-    provider,
-    signalHash,
-    userPublicKey
+  changePriceOracle = async ({
+    newPriceOracle
   }: {
-    provider: string;
-    signalHash: string;
-    userPublicKey: string;
+    newPriceOracle: string;
   }, _fee: number | StdFee | "auto" = "auto", _memo?: string, _funds?: Coin[]): Promise<ExecuteResult> => {
     return await this.client.execute(this.sender, this.contractAddress, {
-      request_latest_signal_from_provider: {
-        provider,
-        signal_hash: signalHash,
-        user_public_key: userPublicKey
-      }
-    }, _fee, _memo, _funds);
-  };
-  sendSignalEncryptedToUser = async ({
-    encryptedSignal,
-    user
-  }: {
-    encryptedSignal: string;
-    user: string;
-  }, _fee: number | StdFee | "auto" = "auto", _memo?: string, _funds?: Coin[]): Promise<ExecuteResult> => {
-    return await this.client.execute(this.sender, this.contractAddress, {
-      send_signal_encrypted_to_user: {
-        encrypted_signal: encryptedSignal,
-        user
-      }
-    }, _fee, _memo, _funds);
-  };
-  claimFeeFromProvider = async ({
-    provider,
-    signalHash
-  }: {
-    provider: string;
-    signalHash: string;
-  }, _fee: number | StdFee | "auto" = "auto", _memo?: string, _funds?: Coin[]): Promise<ExecuteResult> => {
-    return await this.client.execute(this.sender, this.contractAddress, {
-      claim_fee_from_provider: {
-        provider,
-        signal_hash: signalHash
-      }
-    }, _fee, _memo, _funds);
-  };
-  changeOracleAddress = async ({
-    newOracle
-  }: {
-    newOracle: string;
-  }, _fee: number | StdFee | "auto" = "auto", _memo?: string, _funds?: Coin[]): Promise<ExecuteResult> => {
-    return await this.client.execute(this.sender, this.contractAddress, {
-      change_oracle_address: {
-        new_oracle: newOracle
+      change_price_oracle: {
+        new_price_oracle: newPriceOracle
       }
     }, _fee, _memo, _funds);
   };

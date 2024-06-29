@@ -47,15 +47,16 @@ export async function initTrustWothyContract(
   code: number
 ) {
   const initMsg: TrustWorthyInitMsg = {
-    amount_provider_to_pay: {
-      amount: "1",
+    provider_enroll_fee: {
+      amount: "10",
       denom: "orai",
     } as Coin,
     denom: "orai",
     owner: "orai1lwuqpj9teef8j0rjy2l4c5ay9yddw26m03tlem",
-    signal_providers: ["orai1cknd27x0244595pp7a5c9sdekl3ywl52x62ssn"],
-    oracle_address:
+    price_oracle:
       "orai19a5y29zj8qhvgew9e7vrgamzfjf63tpdrwr6545l568dd40q9c9s78fk36",
+    max_cheating: 5,
+    re_enroll_after: 60 * 60 * 24 * 7,  // after 7 days
   };
 
   const info = await client.instantiate(

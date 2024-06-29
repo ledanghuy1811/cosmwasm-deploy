@@ -1,44 +1,36 @@
 export type Uint128 = string;
 export interface InstantiateMsg {
-  amount_provider_to_pay: Coin;
   denom: string;
-  oracle_address: string;
+  max_cheating: number;
   owner: string;
-  signal_providers?: string[] | null;
+  price_oracle: string;
+  provider_enroll_fee: Coin;
+  re_enroll_after: number;
 }
 export interface Coin {
   amount: Uint128;
   denom: string;
 }
 export type ExecuteMsg = {
-  send_public_signal: {
-    signal: PublicSignal;
+  register_to_be_provider: {
+    avatar?: string | null;
+    banner?: string | null;
+    description: string;
+    fee: Coin;
+    name: string;
   };
 } | {
   send_private_signal: {
     signal_hash: string;
+    token: string;
   };
 } | {
-  register_to_be_provider: {};
-} | {
-  change_owner: {
-    new_owner: string;
+  send_public_signal: {
+    signal: PublicSignal;
+    signal_hash: string;
   };
 } | {
-  change_fee_provider: {
-    new_fee: Coin;
-  };
-} | {
-  add_or_remove_provider: {
-    change_state: boolean;
-    providers: string[];
-  };
-} | {
-  set_provider_signal_fee: {
-    fee: Coin;
-  };
-} | {
-  request_latest_signal_from_provider: {
+  request_signal_from_provider: {
     provider: string;
     signal_hash: string;
     user_public_key: string;
@@ -49,13 +41,20 @@ export type ExecuteMsg = {
     user: string;
   };
 } | {
-  claim_fee_from_provider: {
-    provider: string;
-    signal_hash: string;
+  change_owner: {
+    new_owner: string;
   };
 } | {
-  change_oracle_address: {
-    new_oracle: string;
+  change_fee_provider: {
+    new_fee: Coin;
+  };
+} | {
+  set_provider_signal_fee: {
+    fee: Coin;
+  };
+} | {
+  change_price_oracle: {
+    new_price_oracle: string;
   };
 };
 export interface PublicSignal {
@@ -73,11 +72,16 @@ export type QueryMsg = {
     provider: string;
   };
 } | {
-  private_signal: {
+  temporary_signal_info: {
     provider: string;
   };
 } | {
-  provider_signal_fee: {
+  request_encrypted_info: {
+    provider: string;
+    signal_hash: string;
+  };
+} | {
+  provider_info: {
     provider: string;
   };
 } | {
@@ -91,38 +95,59 @@ export type QueryMsg = {
     user: string;
   };
 } | {
-  temporary_private_signals: {
-    provider: string;
+  temp_signal_with_request: {
+    provider?: string | null;
   };
 } | {
-  request_encrypted_info: {
-    provider: string;
-    signal_hash: string;
-  };
-} | {
-  token_price_info: {
-    signal_hash: string;
+  all_user_receive_signal: {
+    user: string;
   };
 };
+export type ArrayOfAllUserReceiveSignalsResponse = AllUserReceiveSignalsResponse[];
+export interface AllUserReceiveSignalsResponse {
+  encrypt_signal: string;
+  provider: string;
+  time: number;
+}
 export interface ConfigResponse {
-  amount_provider_to_pay: Coin;
-  oracle_address: string;
+  max_cheating: number;
   owner: string;
+  price_oracle: string;
+  provider_enroll_fee: Coin;
+  re_enroll_after: number;
   signal_providers: string[];
 }
 export interface LatestUserReceivedSignalResponse {
-  latest_encrypted_signal: string;
-}
-export interface PrivateSignalResponse {
+  latest_encrypted_signal: UserReceiveSignal;
   provider: string;
-  signals: string[];
 }
-export interface ProviderSignalFeeResponse {
+export interface UserReceiveSignal {
+  encrypt_signal: string;
+  time: number;
+}
+export type Addr = string;
+export interface ProviderInfoResponse {
+  provider: ProviderInfo;
+}
+export interface ProviderInfo {
+  address: Addr;
+  avatar?: string | null;
+  banner?: string | null;
+  cheating: number;
+  claimed_fee: Coin;
+  description: string;
   fee: Coin;
+  hold_fee: Coin;
+  name: string;
+  total_request: number;
 }
 export interface PublicSignalResponse {
   provider: string;
-  signals: PublicSignal[];
+  signals: PublicSignalInfo[];
+}
+export interface PublicSignalInfo {
+  hash: string;
+  signal: PublicSignal;
 }
 export type Timestamp = Uint64;
 export type Uint64 = string;
@@ -136,18 +161,30 @@ export interface RequestEncryptedInfo {
   time: Timestamp;
   user: string;
 }
-export interface TemporaryPrivateSignalsResponse {
-  provider: string;
-  temporary_private_signals: string[];
+export interface TempSignalWithRequestResponse {
+  infos: TempSignalRequestInfo[];
 }
-export interface TokenPriceInfoResponse {
-  price_info: PriceInfo[];
-  signal_hash: string;
+export interface TempSignalRequestInfo {
+  fee: Coin;
+  provider: string;
+  request_info: RequestEncryptedInfo[];
+  signal: TemporaryPrivateSignalInfo;
+}
+export interface TemporaryPrivateSignalInfo {
+  hash: string;
+  price: PriceInfo[];
+  time: number;
+  token: string;
 }
 export interface PriceInfo {
   price: Uint128;
   token: string;
 }
+export interface TemporarySignalInfoResponse {
+  provider: string;
+  signal_info: TemporaryPrivateSignalInfo[];
+}
 export interface UserReceivedSignalsResponse {
-  encrypted_signals: string[];
+  encrypted_signals: UserReceiveSignal[];
+  provider: string;
 }
